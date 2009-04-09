@@ -1,17 +1,22 @@
 from collections import namedtuple, defaultdict
 import pprint
-import sys
+import os, sys
+from os.path import join, abspath as abs
+import re
 
 defs = set()
 classes = set()
+files = set()
+
 parents = {}
+child = {}
 
 URL = namedtuple("URL", "file lineno statement")
 
 def line_indentation(line):
     return len(line) - len(line.lstrip())
 
-def construct(text, i, parent_url, parent_indentation):
+def construct_helper(text, i, parent_url, parent_indentation):
     this_url, this_indent = URL(filename, i+1, text[i].strip()), line_indentation(text[i])
     parents[this_url] = parent_url
 
@@ -20,7 +25,7 @@ def construct(text, i, parent_url, parent_indentation):
         line = text[i]
         indent = line_indentation(line)
         
-        if indent < parent_indentation: #<=?
+        if indent < parent_indentation:
             return i
 
         line = text[i]
@@ -35,32 +40,36 @@ def construct(text, i, parent_url, parent_indentation):
         
         if len(first) > 0 and first[0] == "def": #Add to the flatlist
             defs.add(url)
-            i = construct(text, i, purl, pindent)
+            i = construct_helper(text, i, purl, pindent)
     
         elif len(first) > 0 and first[0] == "class":
             classes.add(url)
-            i = construct(text, i, purl, pindent)
+            i = construct_helper(text, i, purl, pindent)
 
     return i
 
-filename = "opener.py"
+def construct(filename):
+    file_url = URL(filename, -1, filename)
+    fh = open(filename, 'r')
+    construct_helper(fh.readlines(), -1, file_url, 0)
+    fh.close()
 
-if len(sys.argv) > 1:
-    filename = sys.argv[1]
 
-text = open(filename).readlines()
+def iter_filenames(pathname, filename_matcher):
+    for root, directories, filenames in os.walk(pathname):
+        for filename in filenames:
+            full = abs(join(root, filename))
+            if filename_matcher.match(filename):
+                yield full
 
-construct(text, -1, filename, 0)
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        pathname = sys.argv[1]
 
-pp = pprint.PrettyPrinter(indent=4)
-print "=========================="
-print "defs:"
-pp.pprint(defs)
-print "------------"
-print "classes:"
-pp.pprint(classes)
-print "------------"
-print "parents:"
-pp.pprint(parents)
+    pathname = abs(pathname) 
 
+    for filename in iter_filenames(pathname, re.compile(".+\.py")):
+        #construct(filename)
+        print filename
+    #iter_filenames(pathname, re.compile(".+\.py"))
 
