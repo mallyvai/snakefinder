@@ -68,8 +68,7 @@ if __name__ == "__main__":
 
     pathname = abs(pathname) 
 
-    for filename in iter_filenames(pathname, re.compile(".+\.py")):
-        #construct(filename)
-        print filename
-    #iter_filenames(pathname, re.compile(".+\.py"))
+    regex = re.compile(".+\.py")
+    for filename in iter_filenames(pathname, regex):
+        construct(filename)
 
