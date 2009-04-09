@@ -12,6 +12,9 @@ def line_indentation(line):
     return len(line) - len(line.lstrip())
 
 def construct(text, i, parent_url, parent_indentation):
+    this_url, this_indent = URL(filename, i+1, text[i].strip()), line_indentation(text[i])
+    parents[this_url] = parent_url
+
     while len(text) > i+1:
         i += 1
         line = text[i]
@@ -28,17 +31,14 @@ def construct(text, i, parent_url, parent_indentation):
         if indent == parent_indentation:
             purl, pindent = parent_url, parent_indentation
         elif indent > parent_indentation:
-            purl, pindent = url, indent
+            purl, pindent = this_url, indent
         
         if len(first) > 0 and first[0] == "def": #Add to the flatlist
-            print line.strip(), parent_url
             defs.add(url)
-            parents[url] = url
             i = construct(text, i, purl, pindent)
     
         elif len(first) > 0 and first[0] == "class":
             classes.add(url)
-            parents[url] = purl
             i = construct(text, i, purl, pindent)
 
     return i
