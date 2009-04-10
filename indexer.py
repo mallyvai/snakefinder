@@ -4,7 +4,7 @@ import pprint
 import os, sys
 from os.path import join, abspath as abs
 import re
-import cPickle
+from cPickle import dump
 
 URL = namedtuple("URL", "file lineno statement")
 BlockGraph = namedtuple("BlockGraph", "defs classes files parents children")
@@ -67,7 +67,7 @@ class Indexer:
 
         return i
 
-    def construct(filename):
+    def construct(self, filename):
         """ Sets up the call to construct_helper that generates the graph for this file."""
         file_url = URL(filename, -1, filename)
         fh = open(filename, 'r')
@@ -82,13 +82,16 @@ if __name__ == "__main__":
 
     pathname = abs(pathname) 
 
-    regex = re.compile(".+\.py")
+    regex = re.compile(".+\.py$")
 
     index = Indexer()
     for filename in iter_filenames(pathname, regex):
         index.construct(filename)
 
     index_file = "index.pkl"
-    output = open(index_file, 'wb')
-    pickle.dump(index, output)
+    fh_output = open(index_file, 'wb')
+    dump(index, fh_output)
+    fh_output.close()
 
+    #pp = pprint.PrettyPrinter(indent=4)
+    #pp.pprint(index.block_graph.parents
