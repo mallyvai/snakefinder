@@ -1,52 +1,47 @@
 from query_exceptions import MalformedQueryException, NoTypeException
+from query_ds import URL, URLandType
 sep_parts = ","
 sep_st = "="
 
 def get_matching_children(part, index, parent_url):
     type, matcher = get_type_and_matcher(part)
-    
+    parent_index = index.children[parent_url]
     results = set()
-    if type is "all": #Manually loop over the union of the blocktype sets. We save memory this way since we don't have to keep pointers of all children.
-        for partition in index.children[parent_url]:
-            for child in partition:
-                if matcher.match(child):
-                    results += child
-    else:
-        for child in index.children[parent_url][type]:
-            if matcher.match(child):
-                results += child
-    return results
+
+    check = lambda a, b: True
+    if type != "all":
+        check = lambda uat, t: uat.type == t
+
+    results = set()
+    while True:
+        for partition_type, children in parent
 
 def get_matching_ancestors(part, index, parent_url):
     type, matcher = get_type_and_matcher(part)
+    parent_index = index.children[parent_url]
+    uninvestigated_children = []
 
-    if type is "all":
-        uninvestigated_children = []
-        results = set()
-        for partition in index.children[parent_url]:
-            for child in partition:
-                if matcher.match(child):
-                    results += child
-                uninvestigated_children.append(child)
-        #We have an initial list of uninvestigated children we need to step through
-        while len(uninvestigated_children) > 0:
-            cur_parent = uninvestigated_children.pop()
-            for partition in index.children[parent_url]:
-                for child in partition:
-                    if matcher.match(child):
-                        results += child
-                    uninvestigated_children.append(child)
+    check = lambda a,b: True #Assume it's "all" initially. It will always be pass.
+    if type != "all":
+        check = lambda uat, t: uat.type == t #Return true if the URLandType has an equal type to the one passed in
 
-        results = set()
-        uninvestigated_children = [ child for partition in index.children[parent_url] for child in partition ]
-        while len(uninvestigated_children) > 0:
-            cur = uninvestigated_children.pop()
-            if matcher.match(cur):
-                results += cur
-            uninvestigated_children.extend([for partition in index.children[cur] for child in partition])
-                    
-    
-
+    results = set()
+    while True:
+        next_batch = []
+        for partition_type, children in parent_index.iteritems():
+            for child in children:
+                uat = URLandType(child, partition_type)
+                next_batch.append(uat)
+        uninvestigated_children.extend(next_batch)
+        if len(uninvestigated_children) is 0: #Leave; no more stuff to look at.
+            break
+        #Get the next one in line and its dictionary.
+        cur_uat = uninvestigated_children.pop()
+        parent_index = index.children[cur_uat.url]
+        #If it's the type we're looking for, and the regex matches the source snippet, it works.
+        if check(cur_uat, type) and matcher.match(cur_uat.url.statement):
+            results += cur_uat
+    return results
 
 #memoize this thing!
 def get_type_and_matcher(part):
