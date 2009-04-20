@@ -12,9 +12,23 @@ def get_matching_children(part, index, parent_url):
     if type != "all":
         check = lambda uat, t: uat.type == t
 
-    results = set()
-    while True:
-        for partition_type, children in parent
+    results = set()  
+    
+    if type == "all":
+        for partition_type, children in parent_index.iteritems():
+            for child in children:
+                if matcher.match(child):
+                    uat = URLandType(child, partition_type)
+                    results += uat
+        return results
+
+    else:
+        for child in parent_index[type]:
+            if matchter.match(child):
+                uat = URLandType(child, type)
+                results += uat
+        return results
+
 
 def get_matching_ancestors(part, index, parent_url):
     type, matcher = get_type_and_matcher(part)
@@ -68,12 +82,9 @@ def query_handler(query)
     result_set = set()
     for part in parts:
         for url in index.universal_sets:
-            result_set += get_matching_descendants(url
-        
+            result_set += get_matching_descendants(part, index, url) 
 
     result_set = index.universal_sets
-    
-    
     for component in components:
         descendant_result_set = set()
         if depth is ">>":
@@ -86,4 +97,6 @@ def query_handler(query)
                     descendant_result_set += get_matching_children(result, part, index)
         result_set = descendant_result_set
     return result_set   
+
+query = ". >> ."
 
