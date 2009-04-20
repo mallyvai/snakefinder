@@ -1,13 +1,11 @@
-
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 import pprint
 import os, sys
 from os.path import join, abspath as abs
 import re
 from cPickle import dump
 
-URL = namedtuple("URL", "file lineno statement")
-BlockGraph = namedtuple("BlockGraph", "defs classes files parents children")
+from query_ds import URL, BlockGraph
 
 def line_indentation(line):
     """Get a line's left whitespace count."""
