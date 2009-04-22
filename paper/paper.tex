@@ -1,0 +1,102 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{cite}
+\usepackage[dvips]{graphicx}
+\usepackage{listings}
+\bibliographystyle{plain}
+
+
+\begin{document}
+\title{Snakefinder: Simple Python Source Search}
+\author{Vaibhav Mallya}
+\maketitle
+
+\section{Abstract}
+
+As programs have grown in complexity, code bases have grown in complexity as well. Managing and searching these complex source trees is important for improving developer productivity. Although there do exist a number of code search tools, all of them have shortcomings for the simple case of indexing all projects on a single system. We present a Python-based tool, Snakefinder, that is fast, simple, and allows hierarchy-aware querying for scattered Python source code on a single computer.
+
+\section{Introduction}
+Most developers trying to develop or improve an application will need to frequently search the codebase to comprehend flow and structure. A good search tool should therefore allow for rapid querying and accurate, up-to-date retrieval, and simple, fast indexing. Additionally, since good developers reuse components from other applications, a good search tool should easily allow a developer to index as many projects as his system holds. We briefly review three popular code search systems to understand some popular approaches, and where they may be improved upon.
+
+
+\section{Brief Reviews}
+\subsection{Google Code Search}
+	\begin{itemize}
+    \item[$+$] Fairly powerful regex-based search mechanism
+    \item[$+$] Allows basic querying for classes, functions, and modules
+
+    \item[$-$] Minimal knowledge of hierarchy    
+	\item[$-$] Not local  
+    \item[$-$] Code has to be uploaded publiclly
+    \item[$-$] Obvious issues with security, privacy, and so forth
+    \item[$-$] Developers have no control over index updates
+	\end{itemize}
+	
+\subsection{grep/awk/ack}
+	\begin{itemize}
+	\item[$+$] Local system search
+    \item[$+$] Works well for small trees
+    \item[$+$] Widely-distributed, widely-known   
+   
+    \item[$-$] No indexing
+    \item[$-$] Can slow for non-trivial bases or sparsely distributed files
+    \item[$-$] No knowledge of hierarchy
+    \item[$-$] Does not scale
+    \end{itemize}
+    
+\subsection{OpenGrok}
+	\begin{itemize}
+    \item[$+$] Very powerful search and analysis capabilities
+    \item[$+$] Can search large, heterogenous code bases rapidly
+    \item[$+$] Locally installed
+    \item[$+$] Built on proven technologies - Java and Lucene
+    
+    \item[$-$] Non-trivial to deploy and run system-wide across projects
+    \item[$-$] Hierarchy-aware querying, but only at the file/directory tree level
+	\end{itemize}
+
+\paragraph{}
+One property common to all these systems is that they attempt to index or search through all terms in all source files. While clearly beneficial for thoroughness and advanced analysis, this leads to significantly larger index sizes, longer index construction times, and usually, longer query times. Another problem is that basic queries can return too many useless results with too little context. Therefore, total awareness does not seem like it is an ideal solution, especially if certain types of information are significantly over-utilized or under-utilized compared to the others.
+
+\paragraph{}
+An informal study conducted by the authors of this paper found that when developers search for existing code snippets, they usually do not query at the level of individual variables and instantiations. Instead, they usually query at the block level - that is, at the level of functions, classes, files, and modules. It seems intuitive that we can conquer the common case here by ignoring most low-level code.
+
+\paragraph{}
+Additionally, when trying to find a block-level element, developers usually have some rough knowledge of hierarchy. For example, a developer looking for the a function called "startDatabase" may know that it exists somewhere inside a class or module called "Database", but may not know exactly where it is. Unfortunately, most existing code search engines do not have this level of awareness - they do not index the full block hierarchy of a source tree. OpenGrok does feature hierarchy-awareness at the level of files and directories, but has little knowledge of hierarchy within the files themselves.
+
+\paragraph{}
+Query languages themselves are a fairly well-studied problem, and there already exist a number of useful query languages. For the purposes of this paper, we implemented our own query language, roughly modeled after SQL. The BNF for the language is as follows:\newline
+\newline
+$\langle$regex$\rangle$ = [any valid python regex without $>>$, $>$, or spaces.]
+\newline
+$\langle$blocktype$\rangle$ ::= file $|$ class $|$ def
+\newline
+$\langle$part$\rangle$ ::= $\langle$blocktype$\rangle$ = $\langle$regex$\rangle$ $|$ $\langle$regex$\rangle$
+\newline
+$\langle$base$\rangle$ ::= $\langle$part$\rangle$ $|$ $\langle$part$\rangle$, $\langle$base$\rangle$ $|$ $\langle$part$\rangle$ $>>$ $\langle$base$\rangle$ $|$ $\langle$part$\rangle$ $>$ $\langle$base$\rangle$
+\newline
+
+\paragraph{}
+There are three important points to note:
+	\begin{itemize}
+    \item There is no recursion necessary for parsing; the query is simply scanned left to right.
+   	\item It is possible to provide just a raw regex without a type; this will search all supported block types.
+    \item In this iteration, full module indexing and querying support is not included due to time constraints and the complexity of python's module construction rules; currently, files are considered the only type of module. Full support for class and function querying is included, however.
+	\end{itemize}
+The indexer generates the following:
+	\begin{itemize}
+	\item A directed, acyclic network graph of block-level elements. This graph is recursively defined in terms of nodes. Every node contains
+       \begin{itemize} 
+       	\item The URL (file path, lineno, content snippet)
+        \item A set for all "class" child nodes, a set for all "function" child nodes, etc.
+        \item We can obtain the set of all child nodes for a node by taking the union of these sets.
+       \end{itemize}
+    \item Disjoint sets for each block type, - a set of all files, a set of all classes, etc.
+    	\begin{itemize}
+    	\item This allows for simple scanning to find of all elements of a type that match some regex.
+    	\item The universal set of all elements - all indexed blocks- is the union of these sets.
+    	\end{itemize}
+	\end{itemize}
+\newpage
+\bibliography{paper_cite}
+\end{document}
