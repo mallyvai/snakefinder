@@ -73,19 +73,79 @@ class Query:
             return split[0], re.compile(split[1])
     
     def _iter_components(self, query):
-        re.findall("\s+>\s+.+|\s+>>\s+.+", query)
+        """
+        I'm not getting caught in regex hell again.
+        Custom parser is fine.
+        """
+
+        depth = None
+        depth_done = True
+        component = ""
+
+        for c in query:
+            if c == ">" and not depth_done:
+                depth += c
+            elif c != ">" and not depth_done:
+                component += c
+                depth_done = True
+            elif c != ">" and depth_done:
+                component += c
+            elif depth_done and c == ">":
+                #We finished this component.
+                component = component.strip()
+                if len(component) is 0:
+                    raise MalformedQueryException(component)
+                elif depth is not None and len(depth) > 2:
+                    raise MalformedQueryException(component)
+                
+                yield depth, component
+                component = ""
+                depth = ""
+                depth += c
+                depth_done = False
+
+        component = component.strip()
+        yield depth, component
+
+    def test_iter_components(self):
+        good_queries = {}
+        #Query => correct set of components
+        good_queries["abdsa=329 > 3929, arg=129 >> 939"] = (
+                (None, "abdsa=329"),
+                (">",  "3929, arg=129"),
+                (">>", "939"))
+        good_queries["abcsd"] = (
+                ( None,"abcsd"),)
+        good_queries["a=b, >> ad3, 292 >> 2=13"] = (
+                (None, "a=b,"),
+                (">>", "ad3, 292"),
+                (">>", "2=13"))
+
+        for query, correct_split in good_queries.iteritems():
+            i = self._iter_components(query)
+            for actual, good in  itertools.izip_longest(i, correct_split, fillvalue=None):
+                if actual != good:
+                    print "FAIL GOODQUERY", actual, good
+
+        bad_queries = ("a >> b >> >"), ("11>>> >")
+        for bad_query in bad_queries:
+            try:
+                for i in self._iter_components(bad_query):
+                    pass
+                print "FAIL BADQUERY:", bad_query
+            except MalformedQueryException: 
+                pass
+    
 
     def __init__(self, index):
         self.index = index
-        self.universal_set = itertools.chain(index.files, index.defs, index.classes)
-        self.universal_parent = 
+        #self.universal_set = itertools.chain(index.files, index.defs, index.classes)
 
     def _unify_sets(self):
         """
         A cheap way to fake a universal set of all URLs.
         """
-        for i in itertools.chain(
-    
+       # for i in itertools.chain(
 
     def handle_query(self, query):
         result_set = set()
@@ -108,5 +168,9 @@ class Query:
         
         return result_set   
 
-query = ". >> ."
+if __name__ == "__main__":
+    q = Query(None)
+    q.test_iter_components()
+    
+
 
