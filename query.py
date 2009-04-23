@@ -1,15 +1,24 @@
 """
+Query mechanism to complement indexer.py's indexing mechanism.
+Usage:
 
+./query.py
+with no arguments for interactive query mode
+
+./query.py some_query >> here > for stuff
+provide query at run time
 """
 
 from data_structures import *
+from indexer import Indexer
+import sys
 import re
 import pickle
-from indexer import Indexer
 import itertools
+import pprint
+
 sep_parts = "~"
 sep_st = "="
-import pprint
 
 class Query:
     def _get_type_and_matcher(self, part):
@@ -115,7 +124,7 @@ class Query:
                 results.add(cur_uat)
         return results
    
-   def _iter_components(self, query):
+    def _iter_components(self, query):
         """
         A straightforward custom parser
         for yielding all of the
@@ -202,9 +211,9 @@ class Query:
         Constructs the universal parent in it.
         """
         self.index = index
-        self.index.children[UniversalParentURL]["files"] = index.files
-        self.index.children[UniversalParentURL]["defs"] = index.defs
-        self.index.children[UniversalParentURL]["classes"] = index.classes
+#        self.index.children[UniversalParentURL]["files"] = index.files
+#        self.index.children[UniversalParentURL]["defs"] = index.defs
+#        self.index.children[UniversalParentURL]["classes"] = index.classes
 
     def handle_query(self, query):
         """
@@ -232,14 +241,35 @@ class Query:
         
         return result_set
 
-def quick_load():
+def load_and_run(query):
+    """
+    Load the index file and loop for query input.
+    """
     index_file = "index.pkl"
     fh_input = open(index_file, 'r') 
     index = pickle.load(fh_input)
     q = Query(index)
-    for i in q.handle_query("Malformed.+"):
-        print i
+
+    def print_query_response(next_query):
+        responses = q.handle_query(next_query)
+        for uat in responses:
+            print uat.type, uat.url.file+":", uat.url.statement
+        return len(responses)
+
+    if query is not None:
+        print_query_response(query)
+        return
+
+    while True:
+        query = raw_input(">> ")
+        print_query_response(query)
 
 if __name__ == "__main__":
-    quick_load()
-
+    print sys.argv
+    if len(sys.argv) == 1:
+        load_and_run(None)
+    else:
+        print "else"
+        query = ' '.join(sys.argv[1:])
+        load_and_run(query)
+    
