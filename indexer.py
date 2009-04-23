@@ -44,7 +44,7 @@ class Indexer:
         this_url, this_indent = URL(filename, i+1, text[i].strip()), line_indentation(text[i])
         self.block_graph.parents[this_url] = (parent_url)
         self.block_graph.children[parent_url][block_type].add(this_url)
-        
+
 
         while len(text) > i+1:
             i += 1
@@ -56,8 +56,7 @@ class Indexer:
 
             line = text[i]
             tokens = line.split()
-            url = URL(filename, i+1, line.strip())
-            
+
             if indent == parent_indentation:
                 purl, pindent = parent_url, parent_indentation
             elif indent > parent_indentation:
@@ -70,10 +69,19 @@ class Indexer:
                 block_type = tokens[0]
             
             if block_type == "def":
+                line = line.replace("def", "", 1).strip()
+                url = URL(filename, i+1, line)
+                print line
                 self.block_graph.defs.add(url)
                 i = self.construct_helper(text, i, purl, pindent, block_type)
         
             elif block_type == "class":
+                print "before:", line
+                line = line.replace("class", "", 1).strip()
+                print "after:", line
+                print line
+                url = URL(filename, i+1, line.strip())
+
                 self.block_graph.classes.add(url)
                 i = self.construct_helper(text, i, purl, pindent, block_type)
 
@@ -83,7 +91,7 @@ class Indexer:
         """ Sets up the call to construct_helper that generates the graph for this file."""
         global DBG_FILENAME
         DBG_FILENAME = filename
-        file_url = URL(filename, -1, filename)
+        file_url = URL(filename, -1,filename) 
         fh = open(filename, 'r')
         lines = fh.readlines()
         fh.close()
@@ -106,7 +114,7 @@ if __name__ == "__main__":
 
     index_file = "index.pkl"
     fh_output = open(index_file, 'wb')
-    dump(index, fh_output)
+    dump(index.block_graph, fh_output)
     fh_output.close()
 
     pp = pprint.PrettyPrinter(indent=4)
