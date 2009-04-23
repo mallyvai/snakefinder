@@ -239,11 +239,11 @@ class Query:
                 for part in self._iter_parts(component):
                     next_result_set = set()
                     if depth == ">>":
-                        for url in result_set:
-                            next_result_set |= self._get_matching_descendants(part, url)
+                        for uat in result_set:
+                            next_result_set |= self._get_matching_descendants(part, uat.url)
                     elif depth == ">":
-                        for url in result_set:
-                            next_result_set |= self._get_matching_children(part, url)
+                        for uat in result_set:
+                            next_result_set |= self._get_matching_children(part, uat.url)
                     result_set = next_result_set
         
         return result_set
