@@ -44,10 +44,7 @@ class Indexer:
     """
     def __init__(self, block_graph=None):
         if block_graph is None:
-            block_graph = BlockGraph(defs=set(),
-                                    classes=set(),
-                                    files=set(),
-                                    parents=dict(),
+            block_graph = BlockGraph(parents=dict(),
                                     children=defaultdict(functools.partial(defaultdict, set)) )
             # This last one is equal to children=defaultdict( lambda:defaultdict(set) ))
             # Note the extra brackets at the end. TODO: Learn more FP.
@@ -55,14 +52,10 @@ class Indexer:
         # Make explicit the fact that the files, defs, and classes members
         # together form the universal set of elements. There is redundancy
         # here, but it adds semantic value to the data structure.
-        block_graph.children[UniversalParentURL]["files"] = block_graph.files
-        block_graph.children[UniversalParentURL]["defs"] = block_graph.defs
-        block_graph.children[UniversalParentURL]["classes"] = block_graph.classes
         self.block_graph = block_graph
         copy_reg.pickle(functools.partial, Children_ToReduce)
 
     def construct_helper(self, text, i, parent_url, parent_indentation, block_type, this_url):
-        global DBG_FILENAME
         """Recursively analyzes a file and generates the parent/child graph 
         and flat lists for functions and classes.
         """
@@ -101,7 +94,8 @@ class Indexer:
             if block_type == "def":
                 line = line.replace("def", "", 1).strip()
                 next_url = URL(filename, i+1, line)
-                self.block_graph.defs.add(next_url)
+
+                self.block_graph.children[UniversalParentURL]["class"].add(next_url)
                 i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
         
             # Strip out the 'class' itself and add the rest
@@ -110,21 +104,22 @@ class Indexer:
                 line = line.replace("class", "", 1).strip()
                 next_url = URL(filename, i+1, line.strip())
 
-                self.block_graph.classes.add(next_url)
+                self.block_graph.children[UniversalParentURL]["class"].add(next_url)
                 i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
 
         return i
 
     def construct(self, filename):
         """ Sets up the call to construct_helper that generates the graph for this file."""
-        file_url = URL(filename, -1,filename) 
+        file_url = URL(filename, -1,filename)
         fh = open(filename, 'r')
         lines = fh.readlines()
         fh.close()
 
-        #It's possible to have empty .py files (__init__.py) 
+        self.block_graph.children[UniversalParentURL]["file"].add(file_url)
+        #It's possible to have empty .py files (__init__.py)
         if len(lines) > 0:
-            self.construct_helper(lines, -1, EmptyURL,0, "file", file_url)
+            self.construct_helper(lines, -1, EmptyURL, 0, "file", file_url)
 
 if __name__ == "__main__":
     pathname = sys.argv[1]

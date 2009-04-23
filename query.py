@@ -78,13 +78,14 @@ class Query:
                 for child in children:
                     if matcher.match(child.statement):
                         uat = URLandType(child, partition_type)
-                        yield uat
-
+                        results.add(uat)
         else:
             for child in parent_index[block_type]:
                 if matcher.match(child.statement):
                     uat = URLandType(child, block_type)
-                    yield uat
+                    results.add(uat)
+
+        return results
 
     def _get_matching_descendants(self, part, parent_url):
         """
@@ -102,6 +103,7 @@ class Query:
         # We use this as a kind of switch; if we are scanning everything,
         # always return true. Otherwise return true only if the block type
         # matches the block type we are looking for.
+        
         check = lambda a,b: True 
         if block_type != "all":
             check = lambda uat, bt: uat.type == bt 
@@ -227,7 +229,7 @@ class Query:
             if first:
                 first = False
                 for part in self._iter_parts(component):
-                    result_set |= self._get_matching_descendants(part, UniversalParentURL)
+                    result_set |= self._get_matching_children(part, UniversalParentURL)
             else:
                 for part in self._iter_parts(component):
                     next_result_set = set()
