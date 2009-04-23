@@ -45,7 +45,7 @@ class Query:
             elif not done_with_block_type and c != sep_st:
                 block_type += c
 
-        if len(block_type) is 0:
+        if len(block_type) == 0:
            raise MalformedQueryException(part)
         
         # If the block type is non-existent, treat the 
@@ -63,6 +63,7 @@ class Query:
         Given a part and some URL, finds all immediate
         children of that URL that match the part's regex.
         """
+        print "getting matching children"
         block_type, matcher = self._get_type_and_matcher(part)
         parent_index = self.index.children[parent_url]
         results = set()
@@ -92,6 +93,8 @@ class Query:
         Given a part and some URL, finds all descendants
         of that url that match the part's regex.
         """
+
+        #print "getting matching descendants"
         block_type, matcher = self._get_type_and_matcher(part)
         
         if parent_url not in self.index.children:
@@ -99,7 +102,7 @@ class Query:
 
         parent_index = self.index.children[parent_url]
         uninvestigated_children = []
-
+        print "parent url: ", parent_url
         # We use this as a kind of switch; if we are scanning everything,
         # always return true. Otherwise return true only if the block type
         # matches the block type we are looking for.
@@ -115,6 +118,7 @@ class Query:
                 for child in children:
                     uat = URLandType(child, partition_type)
                     next_batch.append(uat)
+                    print "adding",uat, "to next batch"
             uninvestigated_children.extend(next_batch)
             if len(uninvestigated_children) is 0: #Leave; no more stuff to look at.
                 break
@@ -122,6 +126,7 @@ class Query:
             cur_uat = uninvestigated_children.pop()
             parent_index = self.index.children[cur_uat.url]
             #If it's the type we're looking for, and the regex matches the source snippet, it works.
+            print "investigating:", cur_uat
             if check(cur_uat, block_type) and matcher.match(cur_uat.url.statement):
                 results.add(cur_uat)
         return results
@@ -233,12 +238,12 @@ class Query:
             else:
                 for part in self._iter_parts(component):
                     next_result_set = set()
-                    if depth is ">>":
+                    if depth == ">>":
                         for url in result_set:
-                            next_result_set |= self._get_matching_descendants(url, part)
-                    elif depth is ">":
+                            next_result_set |= self._get_matching_descendants(part, url)
+                    elif depth == ">":
                         for url in result_set:
-                            next_result_set |= self._get_matching_children(url, part)
+                            next_result_set |= self._get_matching_children(part, url)
                     result_set = next_result_set
         
         return result_set
@@ -271,7 +276,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         load_and_run(None)
     else:
-        print "else"
         query = ' '.join(sys.argv[1:])
         load_and_run(query)
     

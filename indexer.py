@@ -61,6 +61,8 @@ class Indexer:
         """
         
         this_indent = line_indentation(text[i])
+        if (i == -1):
+            this_indent = -1;
 #        self.block_graph.parents[this_url] = (parent_url) Maybe add this back again later if i want...
         self.block_graph.children[parent_url][block_type].add(this_url)
 
@@ -95,7 +97,7 @@ class Indexer:
                 statement = line.replace("def", "", 1).strip()
                 next_url = URL(filename, i+1, statement)
 
-                self.block_graph.children[UniversalParentURL]["class"].add(next_url)
+                self.block_graph.children[UniversalParentURL]["def"].add(next_url)
                 i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
         
             # Strip out the 'class' itself and add the rest
@@ -117,10 +119,10 @@ class Indexer:
         lines = fh.readlines()
         fh.close()
 
-        self.block_graph.children[UniversalParentURL]["file"].add(file_url)
-        #It's possible to have empty .py files (__init__.py)
+        #self.block_graph.children[UniversalParentURL]["file"].add(file_url)
+        #It's possible to have empty .py files (__init__.py), so this check's needed
         if len(lines) > 0:
-            self.construct_helper(lines, -1, EmptyURL, 0, "file", file_url)
+            self.construct_helper(lines, -1, UniversalParentURL, -1, "file", file_url)
 
 if __name__ == "__main__":
     pathname = sys.argv[1]
@@ -136,6 +138,13 @@ if __name__ == "__main__":
     fh_output = open(index_file, 'wb')
     dump(index.block_graph, fh_output)
     fh_output.close()
+    pp = pprint.PrettyPrinter(indent=4)
+
+    for i in index.block_graph.children:
+        if i != UniversalParentURL and i.statement == "query.py":
+            print "URL!!!:", (i)
+            pp.pprint(index.block_graph.children[i])
+            break
 
 # Thanks to http://mail.python.org/pipermail/python-list/2000-January/021385.html
 # For a wonderful little multi-dimensional dictionary hack that i never actually ended up using.
