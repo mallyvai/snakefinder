@@ -1,11 +1,12 @@
 import query_ds
-from query_ds import URL, URLandType, MalformedQueryException, InvalidBlockTypeException, block_types, Children_ToReduce, Children_FromReduce
+from query_ds import URL, URLandType, MalformedQueryException, InvalidBlockTypeException, block_types, Children_ToReduce, Children_FromReduce, UniversalParentURL
 import re
 import pickle
 from indexer import Indexer
 import itertools
 sep_parts = "~"
 sep_st = "="
+import pprint
 
 class Query:
     def _get_type_and_matcher(self, part):
@@ -74,10 +75,14 @@ class Query:
 
     def _get_matching_descendants(self, part, parent_url):
         block_type, matcher = self._get_type_and_matcher(part)
+        
+        if parent_url not in self.index.children:
+            return set()
+
         parent_index = self.index.children[parent_url]
         uninvestigated_children = []
 
-        check = lambda a,b: True #Assume it's "all" initially. It will always be pass.
+        check = lambda a,b: True #Assume it's "all" initially. It will always pass.
         if block_type != "all":
             check = lambda uat, t: uat.type == t #Return true if the URLandType has an equal type to the one passed in
 
@@ -96,7 +101,7 @@ class Query:
             parent_index = self.index.children[cur_uat.url]
             #If it's the type we're looking for, and the regex matches the source snippet, it works.
             if check(cur_uat, block_type) and matcher.match(cur_uat.url.statement):
-                results += cur_uat
+                results.add(cur_uat)
         return results
 
 
@@ -174,6 +179,7 @@ class Query:
                 print "FAIL BADQUERY:", bad_query
             except MalformedQueryException: 
                 pass
+
     def _iter_parts(self, component):
         parts = component.split(sep_parts)
         for i in parts:
@@ -184,7 +190,9 @@ class Query:
 
     def __init__(self, index):
         self.index = index
-        self.universal_parent = itertools.chain(index.files, index.defs, index.classes)
+        self.index.children[UniversalParentURL]["files"] = index.files
+        self.index.children[UniversalParentURL]["defs"] = index.defs
+        self.index.children[UniversalParentURL]["classes"] = index.classes
 
     def _unify_sets(self):
         """
@@ -199,24 +207,31 @@ class Query:
             if first:
                 first = False
                 for part in self._iter_parts(component):
-                    result_set += self._get_matching_descendants(part, self.universal_parent)
+                    result_set |= self._get_matching_descendants(part, UniversalParentURL)
             else:
                 for part in self._iter_parts(component):
                     next_result_set = set()
                     if depth is ">>":
                         for url in result_set:
-                            next_result_set += self._get_matching_descendants(url, part)
+                            next_result_set |= self._get_matching_descendants(url, part)
                     elif depth is ">":
                         for url in result_set:
-                            next_result_set += self._get_matching_children(url, part)
+                            next_result_set |= self._get_matching_children(url, part)
                     result_set = next_result_set
         
-        return result_set   
+        return result_set
 
-if __name__ == "__main__":
+def quick_load():
     index_file = "index.pkl"
     fh_input = open(index_file, 'r') 
     index = pickle.load(fh_input)
     q = Query(index)
-    #q.test_iter_components()
+    for i in q.handle_query("Malformed.+"):
+        print i
+
+if __name__ == "__main__":
+    
+    pp = pprint.PrettyPrinter(indent=4)
+    #pp.pprint(index)
+    quick_load()
 
