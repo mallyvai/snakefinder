@@ -1,11 +1,29 @@
+"""
+An indexer for python source.
+
+Usage: ./indexer.py <directory>
+
+Where directory will be recursively
+searched to find all .py files to indexed
+in indexfile. The index file is recreated on
+every run. This version does not support any form
+of incremental indexing.
+
+The index itself is just a
+pickled BlockGraph
+namedtuple
+object.
+
+"""
+
 from collections import defaultdict
+from os.path import join, abspath as abs
+from cPickle import dump
+from data_structures import *
 import pprint
 import os, sys
-from os.path import join, abspath as abs
 import re
-from cPickle import dump
 import functools
-from query_ds import URL, BlockGraph, Children_ToReduce, Children_FromReduce
 import copy_reg
 
 def line_indentation(line):
@@ -20,8 +38,10 @@ def iter_filenames(pathname, filename_matcher):
             if filename_matcher.match(filename):
                 yield full
 
-DBG_FILENAME = None
 class Indexer:
+    """
+    A class which incapsulates most indexing functionality
+    """
     def __init__(self, block_graph=None):
         if block_graph is None:
             block_graph = BlockGraph(defs=set(),
@@ -29,19 +49,25 @@ class Indexer:
                                     files=set(),
                                     parents=dict(),
                                     children=defaultdict(functools.partial(defaultdict, set)) )
-                                    #children=defaultdict( lambda:defaultdict(set) ))
-            # This last one is equal to defaultdict(functools.partial(defaultdict, set)) ()
-            # Note the extra brackets at the end. really need to learn more FP...
+            # This last one is equal to children=defaultdict( lambda:defaultdict(set) ))
+            # Note the extra brackets at the end. TODO: Learn more FP.
+        
+        # Make explicit the fact that the files, defs, and classes members
+        # together form the universal set of elements. There is redundancy
+        # here, but it adds semantic value to the data structure.
+        block_graph.children[UniversalParentURL]["files"] = block_graph.files
+        block_graph.children[UniversalParentURL]["defs"] = block_graph.defs
+        block_graph.children[UniversalParentURL]["classes"] = block_graph.classes
         self.block_graph = block_graph
         copy_reg.pickle(functools.partial, Children_ToReduce)
 
-    def construct_helper(self, text, i, parent_url, parent_indentation, block_type):
+    def construct_helper(self, text, i, parent_url, parent_indentation, block_type, this_url):
         global DBG_FILENAME
         """Recursively analyzes a file and generates the parent/child graph 
         and flat lists for functions and classes.
         """
-
-        this_url, this_indent = URL(filename, i+1, text[i].strip()), line_indentation(text[i])
+        
+        this_indent = line_indentation(text[i])
         self.block_graph.parents[this_url] = (parent_url)
         self.block_graph.children[parent_url][block_type].add(this_url)
 
@@ -57,6 +83,8 @@ class Indexer:
             line = text[i]
             tokens = line.split()
 
+            # Are we still in the parent?
+            # Or did we go back a level?
             if indent == parent_indentation:
                 purl, pindent = parent_url, parent_indentation
             elif indent > parent_indentation:
@@ -68,29 +96,27 @@ class Indexer:
             if len(tokens) > 0:
                 block_type = tokens[0]
             
+            # Strip out the 'def' statement itself (to save space)
+            # and add it.
             if block_type == "def":
                 line = line.replace("def", "", 1).strip()
-                url = URL(filename, i+1, line)
-                print line
-                self.block_graph.defs.add(url)
-                i = self.construct_helper(text, i, purl, pindent, block_type)
+                next_url = URL(filename, i+1, line)
+                self.block_graph.defs.add(next_url)
+                i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
         
+            # Strip out the 'class' itself and add the rest
+            # of the line.
             elif block_type == "class":
-                print "before:", line
                 line = line.replace("class", "", 1).strip()
-                print "after:", line
-                print line
-                url = URL(filename, i+1, line.strip())
+                next_url = URL(filename, i+1, line.strip())
 
-                self.block_graph.classes.add(url)
-                i = self.construct_helper(text, i, purl, pindent, block_type)
+                self.block_graph.classes.add(next_url)
+                i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
 
         return i
 
     def construct(self, filename):
         """ Sets up the call to construct_helper that generates the graph for this file."""
-        global DBG_FILENAME
-        DBG_FILENAME = filename
         file_url = URL(filename, -1,filename) 
         fh = open(filename, 'r')
         lines = fh.readlines()
@@ -98,12 +124,10 @@ class Indexer:
 
         #It's possible to have empty .py files (__init__.py) 
         if len(lines) > 0:
-            self.construct_helper(lines, -1, file_url, 0, "file")
-
+            self.construct_helper(lines, -1, EmptyURL,0, "file", file_url)
 
 if __name__ == "__main__":
     pathname = sys.argv[1]
-
     pathname = abs(pathname) 
 
     regex = re.compile(".+\.py$")
@@ -116,9 +140,6 @@ if __name__ == "__main__":
     fh_output = open(index_file, 'wb')
     dump(index.block_graph, fh_output)
     fh_output.close()
-
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(index.block_graph.parents)
 
 # Thanks to http://mail.python.org/pipermail/python-list/2000-January/021385.html
 # For a wonderful little multi-dimensional dictionary hack that i never actually ended up using.
