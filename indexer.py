@@ -92,8 +92,8 @@ class Indexer:
             # Strip out the 'def' statement itself (to save space)
             # and add it.
             if block_type == "def":
-                line = line.replace("def", "", 1).strip()
-                next_url = URL(filename, i+1, line)
+                statement = line.replace("def", "", 1).strip()
+                next_url = URL(filename, i+1, statement)
 
                 self.block_graph.children[UniversalParentURL]["class"].add(next_url)
                 i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
@@ -101,8 +101,8 @@ class Indexer:
             # Strip out the 'class' itself and add the rest
             # of the line.
             elif block_type == "class":
-                line = line.replace("class", "", 1).strip()
-                next_url = URL(filename, i+1, line.strip())
+                statement = line.replace("class", "", 1).strip()
+                next_url = URL(filename, i+1, statement)
 
                 self.block_graph.children[UniversalParentURL]["class"].add(next_url)
                 i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
@@ -111,7 +111,8 @@ class Indexer:
 
     def construct(self, filename):
         """ Sets up the call to construct_helper that generates the graph for this file."""
-        file_url = URL(filename, -1,filename)
+        statement = os.path.basename(filename)
+        file_url = URL(filename, -1, statement)
         fh = open(filename, 'r')
         lines = fh.readlines()
         fh.close()
