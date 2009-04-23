@@ -1,12 +1,52 @@
-from query_ds import URL, URLandType, MalformedQueryException, InvalidBlockTypeException, block_types
+import query_ds
+from query_ds import URL, URLandType, MalformedQueryException, InvalidBlockTypeException, block_types, Children_ToReduce, Children_FromReduce
 import re
+import pickle
+from indexer import Indexer
 import itertools
-sep_parts = ","
+sep_parts = "~"
 sep_st = "="
 
 class Query:
+    def _get_type_and_matcher(self, part):
+        """
+        Given a "part" of a query of the form
+        <block_type>=<regex> or regex
+        return a regex matcher and the desired
+        block type.
+        If the block type is invalid, then
+        the whole part gets treated as a regex.
+        If the block type is valid, then a 
+        non-empty regex must be provided.
+        
+        """
+        block_type, regex = "", ""
+        done_with_block_type = False
+        split = ""
+        for c in part:
+            if done_with_block_type:
+                regex += c
+            elif not done_with_block_type and c == sep_st:
+                done_with_block_type = True
+                split = c
+            elif not done_with_block_type and c != sep_st:
+                block_type += c
+
+        if len(block_type) is 0:
+           raise MalformedQueryException(part)
+        
+        # If the block type is non-existent, treat the 
+        # whole part as a regex
+        if block_type not in block_types:
+            return "all", re.compile(block_type+split+regex)
+        
+        #Valid block type; ensure the regex exists
+        if len(regex) > 0:
+            return block_type, re.compile(regex)
+        raise MalformedQueryException(part)
+   
     def _get_matching_children(self, part, parent_url):
-        block_type, matcher = get_type_and_matcher(part)
+        block_type, matcher = self._get_type_and_matcher(part)
         parent_index = self.index.children[parent_url]
         results = set()
 
@@ -26,14 +66,14 @@ class Query:
 
         else:
             for child in parent_index[block_type]:
-                if matchter.match(child):
+                if matcher.match(child):
                     uat = URLandType(child, block_type)
                     results += uat
             return results
 
 
-    def _get_matching_ancestors(self, part, parent_url):
-        block_type, matcher = get_type_and_matcher(part)
+    def _get_matching_descendants(self, part, parent_url):
+        block_type, matcher = self._get_type_and_matcher(part)
         parent_index = self.index.children[parent_url]
         uninvestigated_children = []
 
@@ -60,8 +100,7 @@ class Query:
         return results
 
 
-    #memoize this thing!
-    def _get_type_and_matcher(self, part):
+    """def _get_type_and_matcher(self, part):
         split = part.split(sep_st)
         if len(split is 1):
             return "all", re.compile(part)
@@ -70,7 +109,7 @@ class Query:
         else:
             if split[0] not in block_types:
                 raise MalformedQueryException(part)
-            return split[0], re.compile(split[1])
+            return split[0], re.compile(split[1])"""
     
     def _iter_components(self, query):
         """
@@ -135,11 +174,17 @@ class Query:
                 print "FAIL BADQUERY:", bad_query
             except MalformedQueryException: 
                 pass
-    
+    def _iter_parts(self, component):
+        parts = component.split(sep_parts)
+        for i in parts:
+            if len(i) < 0:
+                raise MalformedQueryException(component)
+            yield i
+
 
     def __init__(self, index):
         self.index = index
-        #self.universal_set = itertools.chain(index.files, index.defs, index.classes)
+        self.universal_parent = itertools.chain(index.files, index.defs, index.classes)
 
     def _unify_sets(self):
         """
@@ -154,7 +199,7 @@ class Query:
             if first:
                 first = False
                 for part in self._iter_parts(component):
-                    result_set += _get_matching_descendants(part, self.universal_parent)
+                    result_set += self._get_matching_descendants(part, self.universal_parent)
             else:
                 for part in self._iter_parts(component):
                     next_result_set = set()
@@ -169,8 +214,9 @@ class Query:
         return result_set   
 
 if __name__ == "__main__":
-    q = Query(None)
-    q.test_iter_components()
-    
-
+    index_file = "index.pkl"
+    fh_input = open(index_file, 'r') 
+    index = pickle.load(fh_input)
+    q = Query(index)
+    #q.test_iter_components()
 
