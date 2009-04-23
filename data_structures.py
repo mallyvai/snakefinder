@@ -43,7 +43,8 @@ class InvalidBlockTypeException(MalformedQueryException):
 
 URL = namedtuple("URL", "file lineno statement")
 URLandType = namedtuple("URLandType", "url type")
-BlockGraph = namedtuple("BlockGraph", "defs classes files parents children")
+#BlockGraph = namedtuple("BlockGraph", "parents children")
+BlockGraph = namedtuple("BlockGraph", "children")
 
 block_types = set(["file", "class", "def"])
 

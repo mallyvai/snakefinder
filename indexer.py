@@ -44,7 +44,7 @@ class Indexer:
     """
     def __init__(self, block_graph=None):
         if block_graph is None:
-            block_graph = BlockGraph(parents=dict(),
+            block_graph = BlockGraph(#parents=dict(),
                                     children=defaultdict(functools.partial(defaultdict, set)) )
             # This last one is equal to children=defaultdict( lambda:defaultdict(set) ))
             # Note the extra brackets at the end. TODO: Learn more FP.
@@ -61,7 +61,7 @@ class Indexer:
         """
         
         this_indent = line_indentation(text[i])
-        self.block_graph.parents[this_url] = (parent_url)
+#        self.block_graph.parents[this_url] = (parent_url) Maybe add this back again later if i want...
         self.block_graph.children[parent_url][block_type].add(this_url)
 
 
