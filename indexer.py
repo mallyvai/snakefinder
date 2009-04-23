@@ -138,13 +138,6 @@ if __name__ == "__main__":
     fh_output = open(index_file, 'wb')
     dump(index.block_graph, fh_output)
     fh_output.close()
-    pp = pprint.PrettyPrinter(indent=4)
-
-    for i in index.block_graph.children:
-        if i != UniversalParentURL and i.statement == "query.py":
-            print "URL!!!:", (i)
-            pp.pprint(index.block_graph.children[i])
-            break
 
 # Thanks to http://mail.python.org/pipermail/python-list/2000-January/021385.html
 # For a wonderful little multi-dimensional dictionary hack that i never actually ended up using.
