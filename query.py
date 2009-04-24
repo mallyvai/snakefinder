@@ -213,9 +213,6 @@ class Query:
         Constructs the universal parent in it.
         """
         self.index = index
-#        self.index.children[UniversalParentURL]["files"] = index.files
-#        self.index.children[UniversalParentURL]["defs"] = index.defs
-#        self.index.children[UniversalParentURL]["classes"] = index.classes
 
     def handle_query(self, query):
         """
@@ -231,15 +228,15 @@ class Query:
                 for part in self._iter_parts(component):
                     result_set |= self._get_matching_children(part, UniversalParentURL)
             else:
+                next_result_set = set()
                 for part in self._iter_parts(component):
-                    next_result_set = set()
                     if depth == ">>":
                         for uat in result_set:
                             next_result_set |= self._get_matching_descendants(part, uat.url)
                     elif depth == ">":
                         for uat in result_set:
                             next_result_set |= self._get_matching_children(part, uat.url)
-                    result_set = next_result_set
+                result_set = next_result_set
         
         return result_set
 
