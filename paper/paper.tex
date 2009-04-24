@@ -119,9 +119,10 @@ Upon a quick glance at the index size, it seems like the minimalist approach has
 	\item There has been no compression utilized whatsoever - the index is simply a serialized Python data structure
 	\item The data structures themselves have more optimal substitutes in the Python standard library
 	\end{itemize}
-	All told, the index is two or three times larger than it could be with some more invested effort and care.
-	We include some sample queries and outputs as a separate attachment. Our hierarchical querying mechanism takes no more than a few seconds
-	to return the full set of va	lid results and is essentially negligible in terms of time.
+	All told, the index is two or three times larger than it could be with some more invested effort and care. In fact, manually compressing the archive post-mortem with Bz yield an index of less than 3 megabytes!
+	Queries were straightforward to test; this approach yields valid queries.
+	We include some sample queries and outputs as a separate attachment. Our hierarchical querying mechanism takes no more than a second
+	to return the full set of valid results and is essentially negligible in terms of time.
 
 \section{Limitations}
 \subsection{Dynamism}
