@@ -1,0 +1,38 @@
+>> sub > .+ > sub
+def /home/mallyvai/Code/boto/boto-1.3a/boto/services/submit.py: submit_file(self, path, metadata=None, cb=None, num_cb=0, prefix='/'):
+def /home/mallyvai/Code/boto/boto-1.3a/boto/services/submit.py: submit_path(self, path, tags=None, ignore_dirs=None, cb=None, num_cb=0, status=False, prefix='/'):
+
+
+>> file=sub
+file /home/mallyvai/Code/python/python-svn/Lib/subprocess.py: subprocess.py
+file /home/mallyvai/Komodo-IDE-5/lib/python/lib/python2.6/subprocess.py: subprocess.py
+file /home/mallyvai/Code/boto/boto-1.3a/boto/services/submit.py: submit.py
+file /home/mallyvai/Documents/Winter2009/482/P3/tests/subprocess.py: subprocess.py
+file /home/mallyvai/Code/2.7/trunk/Demo/tkinter/matt/subclass-existing-widgets.py: subclass-existing-widgets.py
+file /home/mallyvai/Code/2.7/trunk/Lib/subprocess.py: subprocess.py
+file /home/mallyvai/Code/python/python-svn/Demo/tkinter/matt/subclass-existing-widgets.py: subclass-existing-widgets.py
+
+
+>> file=..init > class=Pos > parse
+def /home/mallyvai/Code/d45appengine/google_appengine/google/appengine/ext/admin/__init__.py: parse(self, value):
+
+
+>> file=sub~file=init
+file /home/mallyvai/Code/python/python-svn/Lib/subprocess.py: subprocess.py
+file /home/mallyvai/Komodo-IDE-5/lib/python/lib/python2.6/subprocess.py: subprocess.py
+file /home/mallyvai/Code/boto/boto-1.3a/boto/services/submit.py: submit.py
+file /home/mallyvai/Code/foundation/src/honeypot/raw-analysis/initiators.py: initiators.py
+file /home/mallyvai/Code/android/source/.repo/repo/subcmds/init.py: init.py
+file /home/mallyvai/Documents/Winter2009/482/P3/tests/subprocess.py: subprocess.py
+file /home/mallyvai/Code/2.7/trunk/Demo/tkinter/matt/subclass-existing-widgets.py: subclass-existing-widgets.py
+file /home/mallyvai/Code/2.7/trunk/Lib/subprocess.py: subprocess.py
+file /home/mallyvai/Code/python/python-svn/Demo/tkinter/matt/subclass-existing-widgets.py: subclass-existing-widgets.py
+
+
+>> file=twisted>>class=.+
+class /home/mallyvai/Code/clonedigger/clonedigger/logilab/common/twisted_distutils.py: twisted_install(install):
+class /home/mallyvai/Komodo-IDE-5/lib/mozilla/python/komodo/twisted/plugins/twisted_trial.py: _Reporter(object):
+class /home/mallyvai/Code/clonedigger/clonedigger/logilab/common/twisted_distutils.py: TwistedDistribution(Distribution):
+class /home/mallyvai/Code/clonedigger/clonedigger/logilab/common/twisted_distutils.py: install_twisted_plugins(Command):
+class /home/mallyvai/Code/clonedigger/clonedigger/logilab/common/twisted_distutils.py: twisted_sdist(sdist):
+
