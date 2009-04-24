@@ -25,17 +25,28 @@ import os, sys
 import re
 import functools
 import copy_reg
+import time
+
+_TOTAL_NUM_FILES = 0
+_TOTAL_FILES_MATCHED = 0
+_TOTAL_MATCHED_SIZE = 0
 
 def line_indentation(line):
     """Get a line's left whitespace count."""
     return len(line) - len(line.lstrip())
 
 def iter_filenames(pathname, filename_matcher):
+    global _TOTAL_NUM_FILES
+    global _TOTAL_FILES_MATCHED
+    global _TOTAL_MATCHED_SIZE
     """Yield every filename in the path that matches the pattern"""
     for root, directories, filenames in os.walk(pathname):
         for filename in filenames:
+            _TOTAL_NUM_FILES += 1
             full = abs(join(root, filename))
             if filename_matcher.match(filename):
+                _TOTAL_FILES_MATCHED += 1
+                _TOTAL_MATCHED_SIZE += os.path.getsize(full)
                 yield full
 
 class Indexer:
@@ -131,13 +142,24 @@ if __name__ == "__main__":
     regex = re.compile(".+\.py$")
 
     index = Indexer()
+
+    index_time_start = time.time()
     for filename in iter_filenames(pathname, regex):
         index.construct(filename)
+    index_time_end = time.time()
 
     index_file = "index.pkl"
     fh_output = open(index_file, 'wb')
     dump(index.block_graph, fh_output)
     fh_output.close()
+    
+    index_size = os.path.getsize(index_file)
+
+    print "Total files scanned:", _TOTAL_NUM_FILES
+    print "Python files matched:", _TOTAL_FILES_MATCHED
+    print "Python files net size:", _TOTAL_MATCHED_SIZE
+    print "Time required to index:", index_time_end - index_time_start
+    print "Index size", index_size
 
 # Thanks to http://mail.python.org/pipermail/python-list/2000-January/021385.html
 # For a wonderful little multi-dimensional dictionary hack that i never actually ended up using.
