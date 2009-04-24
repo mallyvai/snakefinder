@@ -68,19 +68,19 @@ Additionally, when trying to find a block-level element, developers usually have
 \subsection{Querying}
 Query languages themselves are a fairly well-studied problem, and there already exist a number of useful query languages. For the purposes of this paper, we implemented our own query language, roughly modeled after SQL. The BNF for the language is as follows:\newline
 \newline
-$\langle$regex$\rangle$ = [any valid python regex without $>>$, $>$, or \~{}.]
+$\langle$regex$\rangle$ = [any valid python regex without $>>$, $>$, or $\sim$.]
 \newline
 $\langle$blocktype$\rangle$ ::= file $|$ class $|$ def
 \newline
 $\langle$part$\rangle$ ::= $\langle$blocktype$\rangle$ = $\langle$regex$\rangle$ $|$ $\langle$regex$\rangle$
 \newline
-$\langle$base$\rangle$ ::= $\langle$part$\rangle$ $|$ $\langle$part$\rangle$\# $\langle$base$\rangle$ $|$ $\langle$part$\rangle$ $>>$ $\langle$base$\rangle$ $|$ $\langle$part$\rangle$ $>$ $\langle$base$\rangle$
+$\langle$base$\rangle$ ::= $\langle$part$\rangle$ $|$ $\langle$part$\rangle$ $\sim$ $\langle$base$\rangle$ $|$ $\langle$part$\rangle$ $>>$ $\langle$base$\rangle$ $|$ $\langle$part$\rangle$ $>$ $\langle$base$\rangle$
 \newline
 
 \paragraph{}
 There are three important properties of note:
 	\begin{itemize}
-	\item The possible \~{} after a part denotes an inclusive OR. Parts can be OR'ed together to form a component.
+	\item The possible $\sim$ after a part denotes an inclusive OR. Parts can be OR'ed together to form a component.
     \item There is no recursion necessary for parsing; the query is simply scanned left to right.
    	\item It is possible to provide just a raw regex without a type; this will search all supported block types.
     \item In this iteration, full module indexing and querying support is not included due to time constraints and the complexity of python's module construction rules; currently, files are considered the only type of module. Full support for class and function querying is included, however.
