@@ -143,7 +143,7 @@ for t in ("'", '"',
 tabsize = 8
 
 RowCol = collections.namedtuple("RowCol", "row col")
-Token  = collections.namedtuple("Token", "type string start end lineno")
+NamedToken  = collections.namedtuple("Token", "type string start end lineno")
 
 class TokenError(Exception): pass
 
@@ -154,7 +154,7 @@ def yieldNamedToken(fn):
     Decorator for generate_tokens. Gets the next token, 
     transforms it into a namedtuple, and yields it.
 
-    Returns a token with:
+    Returns some token with fields:
     token.type,
     token.string
     token.start.row, token.start.col
@@ -162,10 +162,12 @@ def yieldNamedToken(fn):
     token.lineno
     """
     def nameTuple(*args):
-        for anonymous_token in fn(*args):
-           next_token = Token._make(anonymous_token)
-           next_token.start = RowCol._make(next_token.start_pos)
-           next_token.end = RowCol._make(next_token.end_pos)
+        for t in fn(*args):
+           next_token = NamedToken(type = t[0],
+                            string = t[1],
+                            start = RowCol._make(t[2]),
+                            end = RowCol._make(t[3]),
+                            lineno = t[4])
            yield next_token
     return nameTuple
 
