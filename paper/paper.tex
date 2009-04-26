@@ -3,8 +3,8 @@
 \usepackage{cite}
 \usepackage[dvips]{graphicx}
 \usepackage{listings}
+\usepackage{url} 
 \bibliographystyle{plain}
-
 
 \begin{document}
 \title{Snakefinder: Simple Python Source Search}
@@ -20,7 +20,7 @@ Most developers trying to develop or improve an application will need to frequen
 
 
 \section{Brief Reviews}
-\subsection{Google Code Search}
+\subsection{Google Code Search}\cite{Google}
 	\begin{itemize}
     \item[$+$] Fairly powerful regex-based search mechanism
     \item[$+$] Allows basic querying for classes, functions, and modules
@@ -32,7 +32,7 @@ Most developers trying to develop or improve an application will need to frequen
     \item[$-$] Developers have no control over index updates
 	\end{itemize}
 	
-\subsection{grep/awk/ack}
+\subsection{grep/awk/ack}\cite{GNU}
 	\begin{itemize}
 	\item[$+$] Local system search
     \item[$+$] Works well for small trees
@@ -44,7 +44,7 @@ Most developers trying to develop or improve an application will need to frequen
     \item[$-$] Does not scale
     \end{itemize}
     
-\subsection{OpenGrok}
+\subsection{OpenGrok}\cite{OpenGrok}
 	\begin{itemize}
     \item[$+$] Very powerful search and analysis capabilities
     \item[$+$] Can search large, heterogenous code bases rapidly
@@ -62,11 +62,11 @@ One property common to all these systems is that they attempt to index or search
 An informal study conducted by the authors of this paper found that when developers search for existing code snippets, they usually do not query at the level of individual variables and instantiations. Instead, they usually query at the block level - that is, at the level of functions, classes, files, and modules. It seems intuitive that we can conquer the common case here by ignoring most low-level code.
 
 \paragraph{}
-Additionally, when trying to find a block-level element, developers usually have some rough knowledge of hierarchy. For example, a developer looking for the a function called "startDatabase" may know that it exists somewhere inside a class or module called "Database", but may not know exactly where it is. Unfortunately, most existing code search engines do not have this level of awareness - they do not index the full block hierarchy of a source tree. OpenGrok does feature hierarchy-awareness at the level of files and directories, but has little knowledge of hierarchy within the files themselves. Snakefinder attempts to solve these majority-case problems for Python source code.
+Additionally, when trying to find a block-level element, developers usually have some rough knowledge of hierarchy. For example, a developer looking for the a function called \emph{startDatabase} may know that it exists somewhere inside a class or module called \emph{Database}, but may not know exactly where it is. Unfortunately, most existing code search engines do not have this level of awareness - they do not index the full block hierarchy of a source tree. OpenGrok does feature hierarchy-awareness at the level of files and directories, but has little knowledge of hierarchy within the files themselves. Snakefinder attempts to solve these majority-case problems for Python source code.
 
 \section{Snakefinder's Approach}
 \subsection{Querying}
-Query languages themselves are a fairly well-studied problem, and there already exist a number of useful query languages. For the purposes of this paper, we implemented our own query language, roughly modeled after SQL. The BNF for the language is as follows:\newline
+Query languages themselves are a fairly well-studied problem, and there already exist a number of useful query languages. For the purposes of this paper, we implemented our own query language, roughly modeled after SQL. The BNF\cite{BNF} for the language is as follows:\newline
 \newline
 $\langle$regex$\rangle$ = [any valid python regex without $>>$, $>$, or $\sim$.]
 \newline
@@ -87,12 +87,12 @@ There are three important properties of note:
 	\end{itemize}
 	
 \subsection{Indexing}
-The indexer generates the following:
+The indexer\cite{InfoRet} generates the following:
 	\begin{itemize}
 	\item A directed, acyclic network graph of block-level elements. This graph is recursively defined in terms of nodes. Every node contains
        \begin{itemize} 
        	\item The URL (file path, lineno, content snippet)
-        \item A set for all "class" child nodes, a set for all "function" child nodes, etc
+        \item A set for all \emph{class} child nodes, a set for all \emph{function} child nodes, etc
         \item We can obtain the set of all child nodes for a node by taking the union of these sets
        \end{itemize}
     \item Disjoint sets for each block type, - a set of all files, a set of all classes, etc
@@ -104,7 +104,7 @@ The indexer generates the following:
 
 \section{Results}
 
-We ran our indexer over the large, densely populated home directory tree of the author of this paper. We feel this was an accurate simulation of a real-world use-case - we had several whole python installations, one-off scripts scattered haphazardly, and several large, irrelevant, source trees of non-python projects.
+We ran our indexer over the large, densely populated home directory tree of the author of this paper. We feel this was an accurate simulation of a real-world use-case - we had several whole Python installations, one-off scripts scattered haphazardly, and several large, irrelevant, source trees of non-python projects.
 
 \begin{itemize}
 	\item Total files scanned: 200,770
@@ -119,15 +119,15 @@ Upon a quick glance at the index size, it seems like the minimalist approach has
 	\item There has been no compression utilized whatsoever - the index is simply a serialized Python data structure
 	\item The data structures themselves have more optimal substitutes in the Python standard library
 	\end{itemize}
-	All told, the index is two or three times larger than it could be with some more invested effort and care. In fact, manually compressing the archive post-mortem with Bz yield an index of less than 3 megabytes!
-	Queries were straightforward to test; this approach yields valid queries.
-	We include some sample queries and outputs as a separate attachment. Our hierarchical querying mechanism takes no more than a second
+	All told, the index is two or three times larger than it could be with some more invested effort and care. In fact, manually compressing the archive post-mortem with Bz, a simple compression method, yields an index of less than 3 megabytes! This is a very positive and useful result.
+	Queries were straightforward to test; this approach yields valid queries, so validity itself was not a major concern.
+	Our hierarchical querying mechanism takes no more than a second
 	to return the full set of valid results and is essentially negligible in terms of time.
 
 \section{Limitations}
 \subsection{Dynamism}
-Python is a dynamic language, and has a number of powerful constructs such as metaclasses, dynamic module reloading, and monkeypatching that interfere with static analysis. Unfortunately, there is no simple way (or in some cases, no way at all), to analyze source files for certain properties. Snakefinder simply sidesteps all of these issues by ignoring them; in most cases, this should not affect indexing of well-written code.
-A notable exception is the popular Django web application framework which heavily utilizes the aforementioned techniques. Snakefinder will not be able to fully index the block hierarchies of Django applications.
+Python is a dynamic language, and has a number of powerful constructs such as metaclasses, dynamic module reloading, and monkeypatching that interfere with analysis. Unfortunately, there is no simple way (or in some cases, no way at all), to analyze source files for certain properties. Snakefinder simply sidesteps all of these issues by ignoring them; in most cases, this should not affect indexing of well-written code.
+A notable exception is the popular Django\cite{Django} web application framework which heavily utilizes the aforementioned techniques. Snakefinder will not be able to fully index the block hierarchies of Django applications.
 
 \subsection{Lexical Analysis}
 Python is bundled with a number of powerful tools for introspection and source analysis. Python's lexical analyzer in particular would have come in quite useful for this project, but suffered from lack of good code samples. As a result, we wrote our own simple indentation-based analyzer for the purposes of this paper.
@@ -139,6 +139,21 @@ Finally, with the increasing ubiquitness of multi-processor and multi-core compu
 \section{Conclusion}
 Based on both the positive and negatives aspects of some popular source code search tools, we investigated a new approach for hierarchy-aware indexing and retrieval of source code that eschews total awareness in favor of handling the majority case well. Despite some shortcomings in our current implementation, we feel we have demonstrated that the approach itself shows promise.
 
-\newpage
+\pagebreak
+\section{Vocabulary}
+\begin{itemize}
+	\item Python: A programming language.
+
+	\item Index: A tool used in information retrieval. When one ``builds an index'', one takes relevant data from all across the network or system and condenses it to one much smaller file or location. An index serves as a telephone directory of sorts; without one, a search engine would have to search the whole system every time a query was made - understandably, a slow and tedious process.
+
+	\item Code hierarchy: Software engineers and programmers structure code hierarchically and modularly. High level modules may contain lower level modules which may contain lower level modules still. These hierarchies allow engineers to more effectively and safely develop code. There is an obvious hierarchy of files and folders, but source code within a single file can be hierarchically structured as well. This is the case that Snakefinder attempts to handle.
+
+	\item Function, class: Specific code elements that comprise a hierarchy.
+	\item Metaclasses, dynamic module reloading, and monkeypatching: Powerful code elements that are extremely difficult to analyze without substantial effort.
+	\item Regex: Also known as regular expressions, these are a powerful mechanism for succinctly describing many different strings. The regular expression (g*s), for example, would describe ``gas'', ``gus'', and anything with a ``g'' followed by an ``s''.
+
+	\item BNF: Backus$–$Naur Form. A formal specification for a grammar or language.
+\end{itemize}
+
 \bibliography{paper_cite}
 \end{document}
