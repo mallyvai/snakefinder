@@ -143,7 +143,7 @@ for t in ("'", '"',
 tabsize = 8
 
 RowCol = collections.namedtuple("RowCol", "row col")
-NamedToken  = collections.namedtuple("Token", "type string start end lineno")
+NamedToken  = collections.namedtuple("Token", "type string start end line")
 
 class TokenError(Exception): pass
 
@@ -159,7 +159,7 @@ def yieldNamedToken(fn):
     token.string
     token.start.row, token.start.col
     token.end.row, token.end.col
-    token.lineno
+    token.line
     """
     def nameTuple(*args):
         for t in fn(*args):
@@ -167,7 +167,7 @@ def yieldNamedToken(fn):
                             string = t[1],
                             start = RowCol._make(t[2]),
                             end = RowCol._make(t[3]),
-                            lineno = t[4])
+                            line = t[4])
            yield next_token
     return nameTuple
 
