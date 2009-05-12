@@ -15,8 +15,7 @@ EmptyURL: an instance of URL that's intended to be passed as the
 parent parameter to a file's URL constructor.
 
 UniversalParentURL: Represents the abstract URL whose children
-are the set of all elements. Unused by the index, but created by
-the query handler.
+are the set of all elements.
 
 MalformedQueryException: Raised by the query handler.
 InvalidBlockTypeException: Raised by the query handler.
@@ -41,6 +40,7 @@ class InvalidBlockTypeException(MalformedQueryException):
     def __str__(self):
         return repr(self.parameter)
 
+Line = namedtuple("Line", "block_type string row col")
 URL = namedtuple("URL", "file lineno statement")
 URLandType = namedtuple("URLandType", "url type")
 #BlockGraph = namedtuple("BlockGraph", "parents children")
