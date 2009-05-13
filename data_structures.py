@@ -51,22 +51,3 @@ block_types = set(["file", "class", "def"])
 EmptyURL = URL("", "", "")
 UniversalParentURL = "UniversalParentURL"
 
-# I did *not* write this code; it is courtesy of nabit-hab http://codepad.org/BSYSEJC7/fork
-import functools, collections, pickle, pickletools, copy_reg
-
-def Children_FromReduce(obj_type, func, args, kwargs):
-    return obj_type(func, *args, **kwargs)
-
-def Children_ToReduce(obj):
-    return (Children_FromReduce, (type(obj), obj.func, obj.args, obj.keywords or {}))
-
-"""
-Usage:
-pickle(partial, to_reduce)
-
-dd = defaultdict(partial(defaultdict, set))
-s = dumps(dd)
-print s
-dis(s)
-print loads(s)
-"""
