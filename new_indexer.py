@@ -5,12 +5,7 @@ from collections import defaultdict, namedtuple
 import tokenize
 import functools
 import os
-
-
-RowCol = namedtuple("RowCol", "row col")
-NamedToken  = namedtuple("NamedToken", "type string start end line")
-
-
+import optparse
 def generate_named_tokens(filename):
     """
     Accepts a python script's filename
@@ -72,45 +67,95 @@ def generate_logical_lines(filename):
             elif not tok.string.isspace():
                 line += tok.string
 
-def generate_lines_and_urls(filename):
-    for line in generate_logical_lines(filename):
-        url = URL(file=filename, lineno=line.row, statement=line.string)
-        yield line, url
+class Indexer(object):
 
-next_line, next_url = None, None
-def construct_helper(filename, gen, index, par_line, par_url, cur_line, cur_url):
-    global next_line, next_url
-    index.children[UniversalParentURL][next_line.block_type].add(next_url)
-    index.children[par_url][cur_line.block_type].add(cur_url)
-    next_line, next_url = gen.next()
-    while True:
-        if next_line.col < cur_line.col:
+    def __init__(self):
+        self.graph = BlockGraph( children=defaultdict(
+                            functools.partial(defaultdict, set)) )
+
+    def _generate_lines_and_urls(self):
+        for line in generate_logical_lines(self.filename):
+            url = URL(file=self.filename, lineno=line.row, statement=line.string)
+            yield line, url
+
+    def _construct_helper(self, par_line, par_url, cur_line, cur_url):
+        self.graph.children[UniversalParentURL][self.next_line.block_type].add(next_url)
+        self.graph.children[par_url][cur_line.block_type].add(cur_url)
+        
+        try:
+            self.next_line, self.next_url = self.gen.next()
+        except StopIteration:
             return
-        if next_line.col == cur_line.col:
-            construct_helper(filename, gen, index, par_line, par_url, next_line, next_url)
-        elif next_line.col > cur_line.col:
-            construct_helper(filename, gen, index, cur_line, cur_url, next_line, next_url)
 
-def construct(filename):
-    global next_line, next_url
-    index = BlockGraph( children=defaultdict(
-                        functools.partial(defaultdict, set)) )
-    
-    base_filename = os.path.basename(filename)
-    file_url = URL(filename, -1, base_filename)
-    index.children[UniversalParentURL]["file"].add(file_url)
-    gen = generate_lines_and_urls(filename)
-    next_line, next_url = gen.next()
+        while True:
+            if self.next_line.col < cur_line.col:
+                return
+            if self.next_line.col == cur_line.col:
+                self._construct_helper(par_line, par_url, self.next_line, self.next_url)
+            elif self.next_line.col > cur_line.col:
+                self._construct_helper(cur_line, cur_url, self.next_line, self.next_url)
 
-    dline = Line(None, None, None, -1)
-    try:
-        construct_helper(filename, gen, index, dline, file_url, next_line, next_url)
-    except StopIteration:
-        pass
-    finally:
-        for a,b in index.children.iteritems():
-            print a,"||||",b
+    def construct(self, filename):
+        self.filename = filename
+        base_filename = os.path.basename(filename)
+        file_url = URL(filename, -1, base_filename)
+        self.graph.children[UniversalParentURL]["file"].add(file_url)
+        gen = generate_lines_and_urls()
+        self.next_line, self.next_url = gen.next()
 
-construct("small_class.py")
+        dummy_line = Line(None, None, None, -1)
+        construct_helper(dummy_line, file_url, self.next_line, self.next_url)
 
+def setup_parser():
+    parser = optparse.OptionParser()
+
+    parser.add_option("-a", "--update-all",
+            action="store_true", dest="force_update", 
+            help="Force read and indexing of all files")
+    parser.add_option("-c", "--update-changed",
+            action="store_false", dest="force_update",
+            help="Only read and index files if they've changed from last time (default)")
+
+    parser.add_option("-n", "--no-recurse",
+            action="store_false", dest="recurse",
+            help="Don't recurse down matched directories")
+    parser.add_option("-r", "--recurse",
+            action="store_true", dest="recurse",
+            help="Recurse down matched directories (default)")
+
+    parser.add_option("-i", "--index-file",
+            dest="index_filename",
+            help="Write index to FILE (default is index.dat)",
+            metavar="FILE")
+
+    parser.set_defaults(
+            force_update=False,
+            recurse=True,
+            index_filename="index.pkl")
+
+    return parser
+
+if __name__ == "__main__":
+    """
+    Usage:
+    ./indexer [Options][DirPattern]
+    Flags:
+    -f  Force read/indexing of all files.
+        (By default, only indexes if file has been
+        update since index was last read)
+    -n  No recursion (recurses by default)
+
+    DirPattern:
+    A python regex for a directory.
+    A directory name alone is a valid regex.
+
+    Examples:
+    ./indexer -f ~
+    ./indexer -n ~/Code/
+    """
+
+    parser = setup_parser()
+    options, args = parser.parse_args()
+    print options
+    print args
 
