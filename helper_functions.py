@@ -1,8 +1,9 @@
 import functools, collections, pickle, pickletools, copy_reg
+import tokenize
+from data_structures import Line
 
-Line = namedtuple("Line", "block_type string row col")
-RowCol = namedtuple("RowCol", "row col")
-NamedToken  = namedtuple("NamedToken", "type string start end line")
+RowCol = collections.namedtuple("RowCol", "row col")
+NamedToken  = collections.namedtuple("NamedToken", "type string start end line")
 
 def generate_named_tokens(filename):
     """
@@ -64,6 +65,20 @@ def generate_logical_lines(filename):
             # need to append the next non-empty token
             elif not tok.string.isspace():
                 line += tok.string
+
+import cPickle
+import bz2
+def dump_index(filename, graph):
+    copy_reg.pickle(functools.partial, Children_ToReduce)
+    fh = bz2.BZ2File(filename, 'w')
+    cPickle.dump(graph, fh)
+    fh.close()
+
+def load_index(filename):
+    fh = bz2.BZ2File(filename, 'r')
+    graph = pickle.load(fh)
+    fh.close()
+    return graph
 
 # I did *not* write this code; it is courtesy of nabit-hab http://codepad.org/BSYSEJC7/fork
 def Children_FromReduce(obj_type, func, args, kwargs):

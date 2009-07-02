@@ -2,87 +2,33 @@ from tokenize import tok_name
 from data_structures import Line, UniversalParentURL, URL, BlockGraph
 from collections import defaultdict, namedtuple
 
+import helper_functions
+
 import tokenize
 import functools
 import os
 import optparse
-def generate_named_tokens(filename):
-    """
-    Accepts a python script's filename
-
-    Wraps tokenize.generate_tokens to return the token, but in namedtuple form:
-    (type, string, start, end, line).
-
-    where start and end each are
-    (row, col)
-    """
-    fh = open(filename)
-    for t in tokenize.generate_tokens(fh.readline):
-        next_token = NamedToken(type = t[0],
-                            string = t[1],
-                            start = RowCol._make(t[2]),
-                            end = RowCol._make(t[3]),
-                            line = t[4])
-        yield next_token
-    fh.close()
-
-def generate_logical_lines(filename):
-    """
-    Accepts a python script's filename
-    
-    Yields the tuple
-    (block_type, line, row, col)
-    for each class or function declaration in the script.
-
-    Lines are "logical lines". All whitespaces, including newlines, are removed.
-    F.ex:
-
-    def func(a = 222,
-            b, d)
-
-    will be yielded as
-
-    ('def', 'func(a=222,b,d)', 0, 0)
-    """
-    line_started = False
-    
-    for tok in generate_named_tokens(filename):
-
-        # Flag it if the token's a new class or def declaration
-        if not line_started and tok.type == tokenize.NAME:
-            if tok.string == "class" or tok.string == "def":
-                line_started = True
-                block_type = tok.string
-                line, row, col = "", tok.start.row, tok.start.col
-        
-        elif line_started:
-        # If a logical newline, we're done with the definition
-            if tok.type == tokenize.NEWLINE or tok.type == tokenize.ENDMARKER:
-                if len(line) > 0:
-                    yield Line(block_type=block_type, string=line, row=row, col=col)
-                line_started = False
-
-            # Otherwise we're in the middle of a line, so we 
-            # need to append the next non-empty token
-            elif not tok.string.isspace():
-                line += tok.string
 
 class Indexer(object):
 
-    def __init__(self):
-        self.graph = BlockGraph( children=defaultdict(
-                            functools.partial(defaultdict, set)) )
+    def __init__(self, graph=None):
+        if graph is None:
+            self.graph = BlockGraph(children=defaultdict(
+                                    functools.partial(defaultdict, set)) )
+        else:
+            self.graph = graph
 
     def _generate_lines_and_urls(self):
-        for line in generate_logical_lines(self.filename):
+        for line in helper_functions.generate_logical_lines(self.filename):
             url = URL(file=self.filename, lineno=line.row, statement=line.string)
             yield line, url
 
     def _construct_helper(self, par_line, par_url, cur_line, cur_url):
-        self.graph.children[UniversalParentURL][self.next_line.block_type].add(next_url)
+        self.graph.children[UniversalParentURL][self.next_line.block_type].add(self.next_url)
         self.graph.children[par_url][cur_line.block_type].add(cur_url)
         
         try:
+            #Pylint says E: Class _gen_linesurls has no next mem
             self.next_line, self.next_url = self.gen.next()
         except StopIteration:
             return
@@ -100,15 +46,15 @@ class Indexer(object):
         base_filename = os.path.basename(filename)
         file_url = URL(filename, -1, base_filename)
         self.graph.children[UniversalParentURL]["file"].add(file_url)
-        gen = generate_lines_and_urls()
-        self.next_line, self.next_url = gen.next()
+        self.gen = self._generate_lines_and_urls()
+        self.next_line, self.next_url = self.gen.next()
 
         dummy_line = Line(None, None, None, -1)
-        construct_helper(dummy_line, file_url, self.next_line, self.next_url)
+        self._construct_helper(dummy_line, file_url, self.next_line, self.next_url)
 
-def setup_parser():
+def get_options_and_args():
     parser = optparse.OptionParser()
-
+    usage = "usage: %prog [flags] /dir/1 ... /dir/n"
     parser.add_option("-a", "--update-all",
             action="store_true", dest="force_update", 
             help="Force read and indexing of all files")
@@ -125,15 +71,26 @@ def setup_parser():
 
     parser.add_option("-i", "--index-file",
             dest="index_filename",
-            help="Write index to FILE (default is index.dat)",
+            help="Write index to FILE (default is index.pkl)",
             metavar="FILE")
 
     parser.set_defaults(
             force_update=False,
             recurse=True,
             index_filename="index.pkl")
+    
+    options, args = parser.parse_args()
+    
+    #Now we validate the arguments
 
-    return parser
+    if len(args) < 1:
+        parser.error("Needs at least one directory to index!")
+
+    for directory in args:
+        if not os.path.isdir(directory):
+            parser.error(directory + " is not a valid directory")
+
+    return options, args
 
 if __name__ == "__main__":
     """
@@ -146,16 +103,24 @@ if __name__ == "__main__":
     -n  No recursion (recurses by default)
 
     DirPattern:
-    A python regex for a directory.
-    A directory name alone is a valid regex.
-
+    The path for a directory.
+    
     Examples:
     ./indexer -f ~
     ./indexer -n ~/Code/
     """
+    
+    filename_matcher = re.compile(".+\.py$")
+    options, args = get_options_and_args()
 
-    parser = setup_parser()
-    options, args = parser.parse_args()
+    index = Index()
+    if not options.force_update:
+        index.graph = load_index(options.index_filename)
+
+    for directory in args:
+        for filename in iter_filenames(directory, filename_matcher):
+            index.construct(filename)
+
     print options
     print args
 
