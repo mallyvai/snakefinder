@@ -48,20 +48,60 @@
     <h1><a href="http://github.com/mallyvai/snakefinder">snakefinder</a> 
       <span class="small">by <a href="http://github.com/mallyvai">mallyvai</a></span></h1>
 
-    <div class="description">
-      A useful little Python search engine, designed for quickly understanding and analyzing Python codebases.
+  <div class="description">
+      Welcome!
     </div>
+      <p>Snakefinder is a Simple Python Source search engine prototype. 
+      Index a large Python codebase, then quickly query it in a hierarchical way. Discover structure, classes, and functions much more rapidly than with grep, awk, or (gasp) perl :-)</p>
+
+      <p>Take a look at my well-received  <a href="http://cloud.github.com/downloads/mallyvai/inforet/Snakefinder.pptx">presentation</a>, which explains rationale, performance characteristics, 
+      and ‘shortcomings’ (all of which i have in an a few experimental branches that I need to get around to merging with master at some point). 
+      If there is demand ( read: emails ), I’ll happily move faster on the merging.</p>
+      <p>   The presentation also has the BNF for the query language, if you're interested.</p>
+
+      <p>Or, <a href="">read the paper</a> (it's not too dense, I promise :-) )</p>
+    
+    <h2>Usage</h2>
+     <p>1) Feed your tasty codebase to Snakefinder:</p>
+    <p>`python indexer.py /dir/to/codebase`</p>
+    <p> You should notice that you have an 'index.pkl' file in the directory.
+
+     <p>    2) Query it using python’s regex syntax augmented with Snakefinder’s hierarchical mechanisms.</p>
+     <p>    `python query.py`</p>
+
+    <p><b>BNF for query syntax:</b></p>
+    <p>&lt;regex&gt; ::= [python regex without spaces]</p>
+    <p>&lt;type&gt; ::= module | file | class | def</p>
+    <p>&lt;part&gt; ::= &lt;type&gt;=&lt;regex&gt;,&lt;part&gt; | &lt;type&gt; &gt; | &lt;type&gt; &gt;&gt; | &lt;type&gt;</p>
+
+    <p><b>Operators</b></p>
+    <p>“a >> b” means “b has some ancestor a”</p>
+    <p>“a > b” means “a has a child b”</p>
+    <p>“a,b” means “a or b”</p>
+
+     <p><b>Sample queries</b></p>
+    <p>class=smart.+ | dumb.+ > func=spider</p>
+
+     <p>    means "find any class beginning with ‘smart’ or ‘dumb’ that has a child function named ‘spider’ "</p>
+
+     <p>    file=libpython.+ > class=.+</p>
+
+     <p>    means "display all top-level classes in files named ‘libpython’ "</p>
+
+     <p>    file=.+ >> class=.+</p>
+
+     <p>    will display all classes in all files.</p>
 
     <h2>Dependencies</h2>
 <p>Python 2.6 or above (3.0 not yet supported)</p>
 <h2>Install</h2>
 <p>See wiki: http://wiki.github.com/mallyvai/snakefinder</p>
 <h2>License</h2>
-<p>GPL (for now...)</p>
-<h2>Authors</h2>
+<p>GPLv2 (for now...)</p>
+<h2>Authors and Contact</h2>
 <p>Vaibhav Mallya (mallyvai at umich.edu)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>Vaibhav Mallya (mallyvai at umich.edu)<br/>      </p>
+<!--<h2>Contact</h2>
+<p>Vaibhav Mallya (mallyvai at umich.edu)<br/>      </p> -->
 
 
     <h2>Download</h2>
