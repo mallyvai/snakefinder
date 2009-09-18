@@ -1,0 +1,92 @@
+
+<!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module indexer</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>indexer</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/virtualmachine/Documents/Winter2009/inforet/project/indexer.py">/home/virtualmachine/Documents/Winter2009/inforet/project/indexer.py</a></font></td></tr></table>
+    <p><tt>An&nbsp;indexer&nbsp;for&nbsp;python&nbsp;source.<br>
+&nbsp;<br>
+Usage:&nbsp;./indexer.py&nbsp;&lt;directory&gt;<br>
+&nbsp;<br>
+Where&nbsp;directory&nbsp;will&nbsp;be&nbsp;recursively<br>
+searched&nbsp;to&nbsp;find&nbsp;all&nbsp;.py&nbsp;files&nbsp;to&nbsp;indexed<br>
+in&nbsp;indexfile.&nbsp;The&nbsp;index&nbsp;file&nbsp;is&nbsp;recreated&nbsp;on<br>
+every&nbsp;run.&nbsp;This&nbsp;version&nbsp;does&nbsp;not&nbsp;support&nbsp;any&nbsp;form<br>
+of&nbsp;incremental&nbsp;indexing.<br>
+&nbsp;<br>
+The&nbsp;index&nbsp;itself&nbsp;is&nbsp;just&nbsp;a<br>
+pickled&nbsp;BlockGraph<br>
+namedtuple<br>
+object.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="collections.html">collections</a><br>
+<a href="copy_reg.html">copy_reg</a><br>
+<a href="functools.html">functools</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="pickle.html">pickle</a><br>
+<a href="pickletools.html">pickletools</a><br>
+</td><td width="25%" valign=top><a href="pprint.html">pprint</a><br>
+<a href="re.html">re</a><br>
+<a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="indexer.html#Indexer">Indexer</a>
+</font></dt></dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Indexer">class <strong>Indexer</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;which&nbsp;incapsulates&nbsp;most&nbsp;indexing&nbsp;functionality<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Indexer-__init__"><strong>__init__</strong></a>(self, block_graph<font color="#909090">=None</font>)</dt></dl>
+
+<dl><dt><a name="Indexer-construct"><strong>construct</strong></a>(self, filename)</dt><dd><tt>Sets&nbsp;up&nbsp;the&nbsp;call&nbsp;to&nbsp;construct_helper&nbsp;that&nbsp;generates&nbsp;the&nbsp;graph&nbsp;for&nbsp;this&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="Indexer-construct_helper"><strong>construct_helper</strong></a>(self, text, i, parent_url, parent_indentation, block_type, this_url)</dt><dd><tt>Recursively&nbsp;analyzes&nbsp;a&nbsp;file&nbsp;and&nbsp;generates&nbsp;the&nbsp;parent/child&nbsp;graph&nbsp;<br>
+and&nbsp;flat&nbsp;lists&nbsp;for&nbsp;functions&nbsp;and&nbsp;classes.</tt></dd></dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-dump"><strong>dump</strong></a>(...)</dt><dd><tt><a href="#-dump">dump</a>(obj,&nbsp;file,&nbsp;protocol=0)&nbsp;--&nbsp;Write&nbsp;an&nbsp;object&nbsp;in&nbsp;pickle&nbsp;format&nbsp;to&nbsp;the&nbsp;given&nbsp;file.<br>
+&nbsp;<br>
+See&nbsp;the&nbsp;Pickler&nbsp;docstring&nbsp;for&nbsp;the&nbsp;meaning&nbsp;of&nbsp;optional&nbsp;argument&nbsp;proto.</tt></dd></dl>
+ <dl><dt><a name="-iter_filenames"><strong>iter_filenames</strong></a>(pathname, filename_matcher)</dt></dl>
+ <dl><dt><a name="-line_indentation"><strong>line_indentation</strong></a>(line)</dt><dd><tt>Get&nbsp;a&nbsp;line's&nbsp;left&nbsp;whitespace&nbsp;count.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>EmptyURL</strong> = URL(file='', lineno='', statement='')<br>
+<strong>UniversalParentURL</strong> = 'UniversalParentURL'<br>
+<strong>block_types</strong> = set(['class', 'def', 'file'])</td></tr></table>
+</body></html>
