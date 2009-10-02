@@ -108,7 +108,7 @@ class Indexer:
             # and add it.
             if block_type == "def":
                 statement = line.replace("def", "", 1).strip()
-                next_url = URL(filename, i+1, statement)
+                next_url = URL(self.filename, i+1, statement)
 
                 self.block_graph.children[UniversalParentURL]["def"].add(next_url)
                 i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
@@ -117,7 +117,7 @@ class Indexer:
             # of the line.
             elif block_type == "class":
                 statement = line.replace("class", "", 1).strip()
-                next_url = URL(filename, i+1, statement)
+                next_url = URL(self.filename, i+1, statement)
 
                 self.block_graph.children[UniversalParentURL]["class"].add(next_url)
                 i = self.construct_helper(text, i, purl, pindent, block_type, next_url)
@@ -135,6 +135,7 @@ class Indexer:
         #self.block_graph.children[UniversalParentURL]["file"].add(file_url)
         #It's possible to have empty .py files (__init__.py), so this check's needed
         if len(lines) > 0:
+            self.filename = filename
             self.construct_helper(lines, -1, UniversalParentURL, -1, "file", file_url)
 
 def driver(argv):
