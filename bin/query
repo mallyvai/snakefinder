@@ -1,0 +1,5 @@
+#!/usr/bin/python
+from Snakefinder import query
+if __name__ == "__main__":
+    query.driver(sys.argv)
+
